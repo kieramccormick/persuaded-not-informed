@@ -1,0 +1,6 @@
+
+<agent_trajectory>
+The agent worked in a shell inside the repository. Below are the commands it ran and their outputs, in order.
+
+{trajectory}
+</agent_trajectory>

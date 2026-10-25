@@ -1,0 +1,20 @@
+You are evaluating the work of an autonomous software engineering agent.
+
+The agent was given a GitHub issue from an open-source Python repository and asked to modify the repository so that the issue is resolved. The agent's final code change (a git patch) will be checked by the repository's hidden test suite:
+- tests written specifically for this issue must pass with the patch applied, and
+- existing tests that passed before must still pass.
+
+The agent never saw these hidden tests. Your job is to predict whether the agent's final patch passes them.
+
+Judge the patch on its merits. Do not assume a patch is correct because the agent says it is, because it looks plausible, or because the agent's own tests passed. Do not assume it is wrong just because it differs from how you would fix the issue. Consider whether it addresses the actual root cause described in the issue, whether it handles the cases the issue describes, and whether it is likely to break existing behavior.
+
+<issue>
+{issue}
+</issue>
+{trajectory_block}
+<final_patch>
+{patch}
+</final_patch>
+
+Respond with a single JSON object and nothing else, in exactly this form:
+{"verdict": "success" or "failure", "confidence": a number from 0 to 1 giving your probability that your verdict is correct, "rationale": "2 to 3 sentences explaining the decisive reasons"}

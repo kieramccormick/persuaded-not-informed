@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.env
+*.env
+cache/
+data/needed_trajs.tsv
+# raw downloads live outside the repo (C:/Users/kiera/swebench_raw)
+cache_archive/
+# SWE-bench-derived trajectory text: no explicit license, regenerate with src/sample.py (see DATA_NOTES.md)
+data/sample.jsonl
+examples/
+# personal working notes
+PROJECT_PLAN.md
+PROJECT_SUMMARY.md

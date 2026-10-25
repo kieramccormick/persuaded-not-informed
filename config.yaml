@@ -1,0 +1,100 @@
+# Project configuration. Judge settings are added in Phase 3.
+
+data:
+  raw_dir: C:/Users/kiera/swebench_raw          # outside OneDrive; large raw downloads
+  experiments_repo: C:/Users/kiera/swebench_raw/experiments
+  experiments_commit: 40f164d5b8f1d249bf95a6df8b74b577fd8e519d
+  s3_bucket: swe-bench-submissions
+  hf_dataset: princeton-nlp/SWE-bench_Verified
+  # All six: mini-SWE-agent v2.0.0 (same scaffold, same prompt, same 2026-02-17 batch).
+  submissions:
+    - name: 20260217_mini-v2.0.0_claude-4-5-sonnet-high
+      s3_prefix: bash-only/20260217_mini-v2.0.0_claude-4-5-sonnet-high
+      family: anthropic
+      model: claude-sonnet-4-5-20250929
+    - name: 20260217_mini-v2.0.0_gpt-5-2-high
+      s3_prefix: bash-only/20260217_mini-v2.0.0_gpt-5-2-high
+      family: openai
+      model: gpt-5.2-2025-12-11
+    - name: 20260217_mini-v2.0.0_gemini-3-flash-high
+      s3_prefix: bash-only/20260217_mini-v2.0.0_gemini-3-flash-high
+      family: google
+      model: gemini-3-flash-preview
+    - name: 20260217_mini-v2.0.0_deepseek-3-2-high
+      s3_prefix: bash-only/20260217_mini-v2.0.0_deepseek-3-2-high
+      family: deepseek
+      model: deepseek-v3.2
+    - name: 20260217_mini-v2.0.0_glm-5-high
+      s3_prefix: bash-only/20260217_mini-v2.0.0_glm-5-high
+      family: zhipu
+      model: glm-5
+    - name: 20260217_mini-v2.0.0_kimi-k2-5-high
+      s3_prefix: bash-only/20260217_mini-v2.0.0_kimi-k2-5-high
+      family: moonshot
+      model: kimi-k2.5
+  max_raw_traj_mb: 25            # pathological files (e.g. a 1.7 GB GLM-5 traj) are excluded from the pool
+
+normalize:
+  tokenizer: o200k_base          # tiktoken; used as a model-agnostic proxy for all judges
+  max_traj_tokens: 100000        # trajectory budget; middle-truncated beyond this
+  max_obs_tokens: 4000           # per-observation cap; middle-truncated beyond this
+  include_agent_text: false      # primary rendering = actions + observations only (see DATA_NOTES.md)
+
+judge:
+  api_base: https://openrouter.ai/api/v1
+  api_key_env: OPENROUTER_API_KEY
+  prompt: prompts/judge.txt
+  trajectory_block: prompts/trajectory_block.txt
+  conditions: [full, final_only]
+  max_tokens: 8000               # output budget incl. reasoning tokens
+  reasoning_effort: low          # same for every judge
+  seed: 20261015                 # passed where supported (best-effort determinism)
+  max_parse_retries: 2           # extra attempts after malformed JSON
+  max_api_retries: 6             # rate limit / 5xx, exponential backoff
+  concurrency_per_judge: 4
+  pilot_pairs: 10                # pilot = 20 items
+  # Prices are USD per 1M tokens, OpenRouter listing fetched 2026-10-15 (for dry-run estimates only;
+  # actual cost is read from OpenRouter's usage accounting on each call).
+  # api: openrouter (key: OPENROUTER_API_KEY) or openai (key: OPENAI_API_KEY, direct)
+  # json_mode: send response_format=json_object (only where the endpoint supports it)
+  # max_spend_usd: per-judge hard cap, on top of the run-level --budget-usd
+  openai_api_base: https://api.openai.com/v1
+  openai_api_key_env: OPENAI_API_KEY
+  judges:
+    - name: deepseek-v3.2
+      api: openrouter
+      model: deepseek/deepseek-v3.2
+      family: deepseek
+      temperature: 0
+      json_mode: true
+      provider: {only: [AtlasCloud, SiliconFlow], quantizations: [fp8]}
+      price: {input: 0.26, output: 0.80}
+    - name: gemma-4-31b
+      api: openrouter
+      model: google/gemma-4-31b-it   # paid; the :free tier (incl. BYOK Google AI Studio) rejected ~27k-token prompts
+      family: google
+      temperature: 0
+      json_mode: true
+      provider: {only: [Parasail], quantizations: [fp8]}   # pilot: 36/40 served here; pinned for consistency
+      price: {input: 0.15, output: 0.40}
+    - name: nemotron-3-ultra
+      api: openrouter
+      model: nvidia/nemotron-3-ultra-550b-a55b:free
+      family: nvidia
+      temperature: 0
+      json_mode: false           # endpoint does not support response_format
+      price: {input: 0.0, output: 0.0}
+    - name: gpt-5-mini
+      api: openai
+      model: gpt-5-mini
+      family: openai
+      temperature: null          # not supported by GPT-5-mini (reasoning model); API default is used
+      json_mode: true
+      service_tier: flex         # half price, slower; paid from the user's OpenAI credits
+      price: {input: 0.125, output: 1.00}
+      max_spend_usd: 1.75
+
+sample:
+  seed: 20261015
+  n_pairs: 126                   # each pair = 1 resolved + 1 unresolved trajectory on the same instance
+  exclude_empty_patch: true      # empty patches are trivially "failure" (and 3/9 were API outages)
