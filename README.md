@@ -129,3 +129,8 @@ The SWE-bench experiments repository has no LICENSE file. The trajectories were 
 with the open-source mini-SWE-agent, and the issue text comes from public GitHub issues via SWE-bench Verified
 (MIT). We report aggregate results and short quotes. **Ask the SWE-bench maintainers before redistributing
 `data/sample.jsonl` in bulk.** See `DATA_NOTES.md`.
+
+## Acknowledgments
+
+The code in this repository was developed with the assistance of Claude Code (Anthropic). All study design
+decisions and results were reviewed by the author.
